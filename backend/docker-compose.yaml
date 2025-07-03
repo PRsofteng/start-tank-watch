@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  tankwatch:
+    image: start-tankwatch:v1.01     # imagem pronta
+    restart: unless-stopped          # religa após reboot/falta de energia
+    ports:
+      - "8003:8000"                  # host:container
+
+    environment:                     # só o essencial — ajuste se precisar
+      # Conexão PLC
+      PLC_IP: "172.30.140.20"
+      PLC_RACK: "0"
+      PLC_SLOT: "1"
+      PLC_DB_NUM: "1"
+
+      # Intervalo de escaneamento (ms)
+      SCAN_MS: "500"
+
+      # Valores globais padrão
+      SPAN_BAR_DEFAULT: "1.0"     # sensores 0-1 bar
+      HMAX_DEFAULT: "8.0"         # altura 8 m
+      RHO_DEFAULT:  "998"
+      # Exemplo de override de offset/densidade (descomente se usar)
+      # T1_OFF:  "32"
+      # T1_RHO:  "1020"

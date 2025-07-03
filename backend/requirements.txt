@@ -1,0 +1,4 @@
+fastapi==0.111.*
+python-snap7==1.2.*
+uvicorn[standard]==0.29.*
+setuptools
