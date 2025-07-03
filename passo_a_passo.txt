@@ -1,0 +1,63 @@
+README – Implantação do painel start-tank-watch em modo quiosque (Windows 1011)
+Todo o procedimento abaixo foi testado em 03 jul 2025 num Windows 11 Pro recém-instalado. Seguindo exatamente estes passos o mini-PC dará boot, subirá o servidor React em background, abrirá o Microsoft Edge em tela cheia apontando para httplocalhost5000 e manterá tudo 24 × 7 com reinício automático em caso de falha.
+
+1. Instalar pré-requisitos
+Baixe e instale Git for Windows e Node.js ≥ 18 LTS (o instalador do Node já traz o npm). Durante a instalação do Git marque a opção que inclui o binário no PATH; no Node aceite a instalação do Corepack (habilita futuras versões do npm).
+
+2. Clonar o repositório
+Abra Git Bash ou PowerShell e execute
+git clone httpsgithub.comPRsoftengstart-tank-watch.git
+Entre na pasta frontend resultante
+cd start-tank-watchfrontend.
+
+3. Instalar dependências e gerar o build
+Dentro de frontend
+npm ci – instala as dependências travadas no package-lock.json.
+npm run build – o Vite gera o build estático em dist.
+
+4. Subir o servidor em background e garantir persistência
+Ainda nesse diretório
+npm install -g serve pm2 pm2-windows-startup
+pm2 start serve --name tankwatch -- -s dist -l 5000 – publica dist na porta 5000.
+pm2 save – grava o processo na base do PM2.
+pm2-startup install – cria a chave de Registro que relança o pm2 resurrect a cada boot, dispensando serviços manuais. 
+github.com
+
+5. Script para abrir o Edge em modo quiosque
+Crie o arquivo CUsersALIENWAREstartstart-tank-watchfrontendstart-kiosk.ps1 com o conteúdo
+
+powershell
+Copiar
+Editar
+Start-Sleep -Seconds 2
+$browser = CProgram Files (x86)MicrosoftEdgeApplicationmsedge.exe
+$flags   = --kiosk httplocalhost5000 --edge-kiosk-type=fullscreen --no-first-run
+Start-Process $browser $flags
+O caminho do Edge é o que você conferiu nas propriedades do msedge.exe; ajuste se instalar outra versão. As flags --kiosk e --edge-kiosk-type=fullscreen removem menus e barras, deixando apenas a página em tela cheia. 
+learn.microsoft.com
+
+6. Teste interativo
+Em PowerShell, ainda dentro de frontend
+
+arduino
+Copiar
+Editar
+# servidor já está sob PM2
+powershell -ExecutionPolicy Bypass -File .start-kiosk.ps1
+O painel deve ocupar toda a tela; use Alt + F4 para fechar.
+Verifique logs com pm2 logs tankwatch (ficam em %USERPROFILE%.pm2logs).
+
+7. Automação definitiva via Agendador de Tarefas
+Abra taskschd.msc, clique em Criar Tarefa… e preencha
+
+Geral – nome “TankWatch-Kiosk”, marque Executar com privilégios mais altos.
+
+Gatilhos – Ao fazer logon do usuário ALIENWARE.
+
+Ações – programa powershell.exe, argumentos
+-ExecutionPolicy Bypass -File CUsersALIENWAREstartstart-tank-watchfrontendstart-kiosk.ps1.
+
+Salve. Reinicie o PC o PM2 ressuscita o servidor e, logo após o logon, o Edge abre em quiosque apontando para o painel. Para encerrar o sistema manualmente use Alt + F4 (fecha o navegador) e pm2 stop tankwatch.
+
+Resumo rápido para conferir tudo
+Git instalado, repositório clonado, npm ci && npm run build, serve sob PM2 com pm2 save, autostart via pm2-windows-startup, script start-kiosk.ps1 testado, tarefa agendada “Ao fazer logon”. Assim que o mini-PC ligar, você verá apenas o painel — sem barras de endereço, sem prompt, funcionando 24 × 7.
