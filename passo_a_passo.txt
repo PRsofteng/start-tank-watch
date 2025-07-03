@@ -61,3 +61,19 @@ Salve. Reinicie o PC o PM2 ressuscita o servidor e, logo após o logon, o Edge a
 
 Resumo rápido para conferir tudo
 Git instalado, repositório clonado, npm ci && npm run build, serve sob PM2 com pm2 save, autostart via pm2-windows-startup, script start-kiosk.ps1 testado, tarefa agendada “Ao fazer logon”. Assim que o mini-PC ligar, você verá apenas o painel — sem barras de endereço, sem prompt, funcionando 24 × 7.
+
+O processo só inicia corretamente se o PM2 chamar o serve.cmd através do cmd.exe.
+Acrescente o passo abaixo — substitui o antigo “pm2 start serve …” da etapa 4:
+
+powershell
+Copiar
+Editar
+pm2 start "C:\Users\ALIENWARE\AppData\Roaming\npm\serve.cmd" --name tankwatch --interpreter "cmd.exe" --interpreter-args "/c" -- -s dist -l 5000
+pm2 save
+--interpreter "cmd.exe" força o PM2 a usar o shell do Windows.
+
+--interpreter-args "/c" garante que o cmd execute o arquivo .cmd e encerre.
+
+Tudo após o segundo -- é repassado direto ao serve (-s dist -l 5000).
+
+Com esse comando o status do tankwatch fica online, o pm2 save grava o snapshot correto em %USERPROFILE%\.pm2\dump.pm2 e o pm2-startup install restaura automaticamente a cada boot.
